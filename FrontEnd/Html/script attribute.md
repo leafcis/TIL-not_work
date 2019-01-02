@@ -7,7 +7,7 @@
 <script defer src = "extern.js"></script>
 ```
 
-![출처: Peter Reverloo](https://github.com/leafcis/TIL/blob/master/src/script-execution.jpg?raw=true)
+![출처: Peter Reverloo](https://github.com/leafcis/TIL/blob/master/Src/script.jpg?raw=true)
 
 ~~~markdown
 async
