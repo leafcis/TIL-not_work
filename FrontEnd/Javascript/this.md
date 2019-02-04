@@ -241,7 +241,7 @@ Person.prototype.getName = function() {
   return this.name;
 }
 
-var me = new Person('Lee');
+var me = new Person('Lee'); 
 console.log(me.getName());
 
 Person.prototype.name = 'Kim';
@@ -249,4 +249,148 @@ console.log(Person.prototype.getName());
 ~~~
 
  
+
+## 3. 생성자 함수 호출
+
+자바스크립트의 생성자 함수는 말 그대로 객체를 생성하는 역할을 합니다. 
+
+하지만 자바와 같은 객체지향 언어의 생성자 함수와는 다르게 그 형식이 정해져 있는 것이 아니라 기존 함수에 new 연산자를 붙여서 호출하면 해당 함수는 생성자 함수로 동작합니다.
+
+
+
+~~~javascript
+function Person(name) {
+    this.name = name;
+}
+
+var me = new Person('Lee');
+console.log(me);
+
+var you = Person('Kim');
+console.log(you);
+~~~
+
+new 연산자와 함께 생성하 함수를 호출하면 this 바인딩이 메소드나 함수 호출 떄와는 다르게 동작합니다.
+
+
+
+### 생성자 함수 동작 방식
+
+new 연산자와 함께 생성자 함수를 호출하면 다음과 같은 수순으로 동작합니다.
+
+1. 빈 객체 생성 및 this 바인딩
+
+   생성자 함수의 코드가 실행되기 전 빈 객체가 생성되고, 이 빈 객체가 생성자 함수가 새로 생성하는 객체입니다. 이후 생성자 함수 내에서 사용되는 this는 이 빈 객체를 가리키며, 생성된 빈 객체는 생성자 함수의 prototype 프로퍼티가 가리키는 객체를 자신의 프로토타입 객체로 설정합니다.
+
+2. this를 통한 프로퍼티 생성
+
+   생성된 빈 객체에 this를 사용하여 동적으로 프로퍼티나 메소드를 생성할 수 있습니다. this는 새로 생성된 객체를 가리키므로 this를 통해 생성한 프로퍼티와 메소드는 새로 생성된 객체에 추가됩니다.
+
+3. 생성된 객체 반환
+
+   * 반환문이 없는 경우, this에 바인딩 된 새로 생성한 객체가 반환됩니다. 명시적으로 this를 반환하여도 결과는 같습니다.
+   * 반환문이 this가 아닌 다른 객체를 명시적으로 반환하는 경우, this가 아닌 해당 객체가 반환됩니다. 이 때 this를 반환하지 않은 함수는 생성자 함수로서의 역할을 수행하지 못합니다. 따라서 생성자 함수는 반환문을 명시적으로 사용하지 않습니다. 
+
+
+
+~~~
+function Person(name) {
+    // 생성자 함수 코드 실행 전	--- 1
+    this.name = name; 	// ------ 2
+    // 생성된 함수 반환  --------- 3
+}
+~~~
+
+
+
+### 객체 리터럴 방식과 생성자 함수 방식의 차이
+
+~~~javascript
+// 객체 리터럴 방식
+var foo = {
+  name: 'foo',
+  gender: 'male'
+}
+
+console.dir(foo);
+
+// 생성자 함수 방식
+function Person(name, gender) {
+  this.name = name;
+  this.gender = gender;
+}
+
+var me  = new Person('Lee', 'male');
+console.dir(me);
+
+var you = new Person('Kim', 'female');
+console.dir(you);
+~~~
+
+객체 리터럴 방식과 생성자 함수 방식의 차이는 프로토타입 객체에 있습니다.
+
+* 객체 리터럴의 경우, 생성된 객체의 프로토타입 객체는 Object.prototype
+* 생성자 함수의 경우, 생성된 객체의 프로토타입 객체는 Person.prototype
+
+
+
+### 생성자 함수에 new 연산자를 붙이지 않고 호출할 경우
+
+일반 함수와 생성자 함수에 특별한 형식적 차이는 없고 new 연산자를 붙여서 호출하면 해당 함수는 생성자 함수로 동작합니다.
+
+그러나 객체 생성 목적으로 작성된 생성자 함수를 new 없이 호출하거나, 반대로 일반 함수에 new를 붙여 호출하면 오류가 발생할 수 있습니다. 일반 함수와 생성자 함수의 호출 시 this 바인딩 방식이 다르기 때문입니다.
+
+일반 함수를 호출하면 this는 전역 객체에 바인딩되지만, new 연산자와 함께 생성자 함수를 호출하면 this는 생성자 함수가 암묵적으로 생성된 빈 객체에 바인딩됩니다.
+
+~~~javascript
+function Person(name) {
+  // new없이 호출하는 경우, 전역객체에 name 프로퍼티를 추가
+  this.name = name;
+};
+
+// 일반 함수로서 호출되었기 때문에 객체를 암묵적으로 생성하여 반환하지 않는다.
+// 일반 함수의 this는 전역객체를 가리킨다.
+var me = Person('Lee');
+
+console.log(me); // undefined
+console.log(window.name); // Lee
+~~~
+
+생성자 함수를 new 없이 호출한 경우, 함수 Person 내부의 this는 전역객체를 가리키므로 name은 전역변우세 바인딩되며, 또한 new와 함께 생성자 함수를 호출하는 경우에 암묵적으로 반환하던 this도 반환하지 않으며, 반환문이 없으므로 undefined를 반환하게 됩니다.
+
+일반 함수와 생성자 함수에 특별한 형식적 차이는 없기에 일반적으로 생성자 함수명은 첫 문자를 대문자로 기술하여 혼란을 방지하려는 노력을 합니다.
+
+참고로 대부분의 빌트인 생성자(Object, Regex, Array 등)는 new 연산자와 함께 호출되었는지를 확인한 후 적절한 값을 반환합니다.
+
+다시 말하지만 new 연산자와 함께 생성자 함수를 호출하는 경우, 생성자 함수 내부의  this는 생성자 함수에 의해 생성된 인스턴스를 가리킵니다. 따라서 아래 A 함수가 new 연산자와 함께 생성자 함수로써 호출되면 A 함수 내부의 this는 A 생성자 함수에 의해 생성된 인스턴스를 가리키는 것이구요.
+
+~~~javascript
+// Scope-Safe Constructor Pattern
+function A(arg) {
+  // 생성자 함수가 new 연산자와 함께 호출되면 함수의 선두에서 빈객체를 생성하고 this에 바인딩
+
+  /*
+  this가 호출된 함수(arguments.callee, 본 예제의 경우 A)의 인스턴스가 아니면 new 연산자를 사용하지 않은 것이므로 이 경우 new와 함께 생성자 함수를 호출하여 인스턴스를 반환
+  arguments.callee는 호출된 함수의 이름을 나타냄. 이 예제의 경우 A로 표기하여도 문제없이 동작하지만 특정함수의 이름과 의존성을 없애기 위해서 arguments.callee를 사용하는 것이 좋음
+  */
+  if (!(this instanceof arguments.callee)) {
+    return new arguments.callee(arg);
+  }
+
+  // 프로퍼티 생성과 값의 할당
+  this.value = arg ? arg : 0;
+}
+
+var a = new A(100);
+var b = A(10);
+
+console.log(a.value);
+console.log(b.value);
+~~~
+
+> callee는 arguments 객체의 프로퍼티로서 함수 바디 내에서 현재 실행 중인 함수를 참조할 때 사용합니다., 다시말해, 함수 바디 내에서 현재 실행 중인 함수의 이름을 반환합니다.
+
+
+
+## 4. apply, call, bind 호출
 
