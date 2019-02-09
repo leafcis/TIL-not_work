@@ -394,3 +394,138 @@ console.log(b.value);
 
 ## 4. apply, call, bind 호출
 
+this에 바인딩 될 객체는 함수 호출 패턴에 의해 결정됩니다. 이는 자바스크립트 엔진이 수행하는 것인데, 이러한 자바스크립트 엔진의 암묵적 this 바인딩 이외에 this를 특정 객체에 명시적으로 바인딩하는 방법도 존재합니다.
+
+Function.protorype.apply, Function.prototype.call 메소드가 이에 속합니다.
+
+이 메소드들은 모든 함수 객체의 프로토타입 객체인 Function.prototype 객체의 메소드입니다.
+
+~~~javascript
+func.apply(thisArg, [argsArray])
+// thisArg: 함수 내부의 this에 바인딩할 객체
+// argsArray: 함수에 전달할 argument의 배열
+~~~
+
+기억해야 할 것은 apply() 메소드를 호출하는 주체는 함수이며 apply() 메소드는 this를 특정 객체에 바인딩할 뿐 본질적인 기능은 함수 호출이라는 것입니다.
+
+
+
+~~~javascript
+var Person = function (name) {
+    this.name = name;
+};
+
+var foo = {};
+
+// apply 메소드는 생성자함수 Person을 호출합니다. 이 때, this에 객체 foo를 바인딩하구요.
+Person.apply(foo, ['name']);
+
+console.log(foo); // { name : 'name' }
+~~~
+
+빈 객체 foo를 apply() 메소드의 첫번째 매개변수에, argument의 배열을 두번째 매개변수에 전달하면서 Person 함수를 호출하였는데요, 이때 Preson 함수의 this는 foo 객체가 됩니다. Person 함수는 this의 name 프로퍼티에 매개변수 name에 할당된 인수를 할당하는데 this에 바인딩된 foo 객체에는 name 프로퍼티가 없으므로 name 프로퍼티가 동적 추가되고 값이 할당됩니다.
+
+apply() 메소드의 대표적인 용도는 arguments 객체와 같은 유사 배열 객체에 배열 메소드를 사용하는 경우입니다. arguments 객체는 배열이 아니기 때문에 slice() 같은 배열의 메소드를 사용할 수 없으나 apply() 메소드를 이용하면 가능합니다.
+
+
+
+~~~javascript
+function convertArgsToArray() {
+  console.log(arguments);
+
+  // arguments 객체를 배열로 변환
+  // slice: 배열의 특정 부분에 대한 복사본을 생성한다.
+  var arr = Array.prototype.slice.apply(arguments); // arguments.slice
+  // var arr = [].slice.apply(arguments);
+
+  console.log(arr);
+  return arr;
+}
+
+convertArgsToArray(1, 2, 3);
+~~~
+
+Array.prototype.slice.apply(arguments)는 "Array,prototype.slice() 메소드를 호출. 단, this는 arguments 객체로 바인딩" 이란 의미가 됩니다. 결국 Array.prototype.slice() 메소드를 arguments 객체 자신의 메소드인 것처럼 arguments.slice() 와 같은 형태로 호출하라는 것입니다.
+
+call() 메소드의 경우, apply()와 기능은 같지만, apply()의 두번째 인자에서 배열 형태로 넘긴 것을 각각 하나의 인자로 넘깁니다.
+
+
+
+~~~javascript
+Person.apply(foo, [1, 2, 3]);
+
+Person.call(foo, 1, 2, 3);
+~~~
+
+apply()와 call() 메소드는 콜백 함수의 this를 위해서 사용되기도 합니다.
+
+
+
+~~~javascript
+function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.doSomething = function(callback) {
+  if(typeof callback == 'function') {
+    // --------- 1
+    callback();
+  }
+};
+
+function foo() {
+  console.log(this.name); // --------- 2
+}
+
+var p = new Person('Lee');
+p.doSomething(foo);  // undefined
+~~~
+
+1의 시점에서 this는 Person 객체이나, 2의 시점에서 this는 전역 객체 window를 가리키게 됩니다. 콜백함수를 호출하는 외부 함수 내부의 this와 콜백함수 내부의 this가 다르므로 문맥상 문제가 발생하게 되는것이죠. 따라서 콜백함수 내부의 this를 콜백함수를 호출하는 함수 내부의 this와 일치시켜주어야 합니다.
+
+
+
+~~~javascript
+function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.doSomething = function (callback) {
+  if (typeof callback == 'function') {
+    callback.call(this);
+  }
+};
+
+function foo() {
+  console.log(this.name);
+}
+
+var p = new Person('Lee');
+p.doSomething(foo);  // 'Lee'
+~~~
+
+ES5에 추가된 Function.prototype.bind를 사용하는 방법도 가능한데, Function.prototype.bind는 함수에 인자로 전달한 this가 바인딩된 새로운 함수를 리턴합니다. 즉, Function.prototype.bind는 Function.prototype.apply, Function.prototype.call 메소드와 같이 함수를 실행하지 않기 때문에 명시적으로 함수를 호출할 필요가 있습니다.
+
+
+
+~~~javascript
+function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.doSomething = function (callback) {
+  if (typeof callback == 'function') {
+    // callback.call(this);
+    // this가 바인딩된 새로운 함수를 호출
+    callback.bind(this)();
+  }
+};
+
+function foo() {
+  console.log('#', this.name);
+}
+
+var p = new Person('Lee');
+p.doSomething(foo);  // 'Lee'
+~~~
+
